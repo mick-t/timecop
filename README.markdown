@@ -5,11 +5,11 @@
 
 ## DESCRIPTION
 
-A gem providing "time travel" and "time freezing" capabilities, making it dead simple to test time-dependent code.  It provides a unified method to mock Time.now, Date.today, and DateTime.now in a single call.
+A gem providing "time travel" and "time freezing" capabilities, making it dead simple to test time-dependent code. It provides a unified method to mock `Time.now`, `Date.today`, `DateTime.now`, and `Process.clock_gettime` in a single call.
 
 ## INSTALL
 
-`gem install timecop`
+`bundle add timecop`
 
 ## FEATURES
 
@@ -17,13 +17,13 @@ A gem providing "time travel" and "time freezing" capabilities, making it dead s
 - Travel back to a specific point in time, but allow time to continue moving forward from there.
 - Scale time by a given scaling factor that will cause time to move at an accelerated pace.
 - No dependencies, can be used with _any_ ruby project
-- Timecop api allows arguments to be passed into #freeze and #travel as one of the following:
+- Timecop api allows arguments to be passed into `#freeze` and `#travel` as one of the following:
   - Time instance
   - DateTime instance
   - Date instance
   - individual arguments (year, month, day, hour, minute, second)
-  - a single integer argument that is interpreted as an offset in seconds from Time.now
-- Nested calls to Timecop#travel and Timecop#freeze are supported -- each block will maintain its interpretation of now.
+  - a single integer argument that is interpreted as an offset in seconds from `Time.now`
+- Nested calls to `Timecop#travel` and `Timecop#freeze` are supported -- each block will maintain its interpretation of now.
 - Works with regular Ruby projects, and Ruby on Rails projects
 
 ## USAGE
@@ -62,7 +62,7 @@ helpful if your whole application is time-sensitive.  It allows you to build
 your test data at a single point in time, and to move in/out of that time as
 appropriate (within your tests)
 
-in config/environments/test.rb
+in `config/environments/test.rb`
 
 ```ruby
 config.after_initialize do
@@ -74,10 +74,10 @@ end
 
 ### The difference between Timecop.freeze and Timecop.travel
 
-freeze is used to statically mock the concept of now. As your program executes,
-Time.now will not change unless you make subsequent calls into the Timecop API.
-travel, on the other hand, computes an offset between what we currently think
-Time.now is (recall that we support nested traveling) and the time passed in.
+`freeze` is used to statically mock the concept of now. As your program executes,
+`Time.now` will not change unless you make subsequent calls into the Timecop API.
+`travel`, on the other hand, computes an offset between what we currently think
+`Time.now` is (recall that we support nested traveling) and the time passed in.
 It uses this offset to simulate the passage of time.  To demonstrate, consider
 the following code snippets:
 
@@ -127,6 +127,15 @@ Timecop.safe_mode?
 # using method without block
 Timecop.freeze
 # => Timecop::SafeModeException: Safe mode is enabled, only calls passing a block are allowed.
+```
+
+### Configuring Mocking Process.clock_gettime
+
+By default Timecop does not mock Process.clock_gettime. You must enable it like this:
+
+``` ruby
+# turn on
+Timecop.mock_process_clock = true
 ```
 
 ### Rails v Ruby Date/Time libraries

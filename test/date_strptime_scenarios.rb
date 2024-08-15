@@ -18,6 +18,11 @@ module DateStrptimeScenarios
     assert_equal Date.strptime("153", '%j'), Date.new(1984, 6, 1)
   end
 
+  def test_date_strptime_day_of_year_with_year
+    assert_equal Date.strptime("1999 153", '%Y %j'), Date.new(1999, 6, 2)
+  end
+
+
   def test_date_strptime_without_specifying_format
     assert_equal Date.strptime('1999-04-14'), Date.new(1999, 4, 14)
   end
@@ -31,8 +36,48 @@ module DateStrptimeScenarios
     assert_equal Date.strptime('1984-09', '%G-%V'), Date.new(1984, 2, 27)
   end
 
+  def test_date_strptime_with_commercial_week_date_and_day_of_week_from_sunday
+    #2/27/1984 is a monday. wed the 29th is the last day of march.
+
+    #1984-09 is 9th commercial week of 1984 starting on monday 2/27
+    #specifying day of week = 0 with non-commercial day of week means
+    #we jump to sunday, so 6 days after monday 2/27 which is 3/4
+    assert_equal Date.strptime('1984-09-0', '%G-%V-%w'), Date.new(1984, 3, 04)
+    assert_equal Date.strptime('1984-09-1', '%G-%V-%w'), Date.new(1984, 2, 27)
+    assert_equal Date.strptime('1984-09-2', '%G-%V-%w'), Date.new(1984, 2, 28)
+    assert_equal Date.strptime('1984-09-3', '%G-%V-%w'), Date.new(1984, 2, 29)
+    assert_equal Date.strptime('1984-09-6', '%G-%V-%w'), Date.new(1984, 3, 03)
+
+    #1984-09 is 9th commercial week of 1984 starting on a monday
+    #specifying day of week = 1 with commercial day of week means stay at the 27th
+    assert_equal Date.strptime('1984-09-1', '%G-%V-%u'), Date.new(1984, 2, 27)
+    assert_equal Date.strptime('1984-09-2', '%G-%V-%u'), Date.new(1984, 2, 28)
+    assert_equal Date.strptime('1984-09-3', '%G-%V-%u'), Date.new(1984, 2, 29)
+    assert_equal Date.strptime('1984-09-7', '%G-%V-%u'), Date.new(1984, 3, 04)
+  end
+
+  def test_date_strptime_week_number_of_year_day_of_week_sunday_start
+    assert_equal Date.strptime('1984 09 0', '%Y %U %w'), Date.new(1984, 2, 26)
+  end
+
   def test_date_strptime_with_iso_8601_week_date
     assert_equal Date.strptime('1984-W09-1', '%G-W%V-%u'), Date.new(1984, 2, 27)
+  end
+
+  def test_date_strptime_with_year_and_week_number_of_year
+    assert_equal Date.strptime('201810', '%Y%W'), Date.new(2018, 3, 5)
+  end
+
+  def test_date_strptime_with_year_and_week_number_of_year_and_day_of_week_from_monday
+    assert_equal Date.strptime('2018107', '%Y%W%u'), Date.new(2018, 3, 11)
+  end
+
+  def test_date_strptime_with_just_week_number_of_year
+    assert_equal Date.strptime('14', '%W'), Date.new(1984, 4, 02)
+  end
+
+  def test_date_strptime_week_of_year_and_day_of_week_from_sunday
+    assert_equal Date.strptime('140', '%W%w'), Date.new(1984, 4, 8)
   end
 
   def test_date_strptime_with_seconds_since_epoch
@@ -45,6 +90,18 @@ module DateStrptimeScenarios
 
   def test_date_strptime_with_invalid_date
     assert_raises(ArgumentError) { Date.strptime('', '%Y-%m-%d') }
+  end
+
+  def test_date_strptime_with_gregorian
+    assert_equal Date.strptime('1999-04-01', '%Y-%m-%d', Date::GREGORIAN), Date.new(1999, 4, 1)
+  end
+
+  def test_date_strptime_with_gregorian_non_leap
+    assert(!Date.strptime('1000-04-01', '%Y-%m-%d', Date::GREGORIAN).leap?)
+  end
+
+  def test_date_strptime_with_julian_leap
+    assert(Date.strptime('1000-04-01', '%Y-%m-%d', Date::JULIAN).leap?)
   end
 
   def test_ancient_strptime
@@ -66,24 +123,20 @@ module DateStrptimeScenarios
       [
         '%Y %m %d',
         '%C %y %m %d',
-
         '%Y %j',
         '%C %y %j',
-
-        #TODO Support these formats
-        # '%G %V %w',
-        # '%G %V %u',
-        # '%C %g %V %w',
-        # '%C %g %V %u',
-
-        # '%Y %U %w',
-        # '%Y %U %u',
-        # '%Y %W %w',
-        # '%Y %W %u',
-        # '%C %y %U %w',
-        # '%C %y %U %u',
-        # '%C %y %W %w',
-        # '%C %y %W %u',
+        '%G %V %w',
+        '%G %V %u',
+        '%C %g %V %w',
+        '%C %g %V %u',
+        '%Y %W %w',
+        '%Y %W %u',
+        '%C %y %W %w',
+        '%C %y %W %u',
+        '%Y %U %w',
+        '%Y %U %u',
+        '%C %y %U %w',
+        '%C %y %U %u',
       ].each do |fmt|
         s = d.strftime(fmt)
         d2 = Date.strptime(s, fmt)
